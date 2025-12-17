@@ -33,7 +33,9 @@ exports.createQuiz = async (req, res) => {
 // ================================
 exports.getAllQuizzes = async (req, res) => {
   try {
-    const quizzes = await Quiz.find().populate("createdBy", "username");
+    const query = { createdBy: req.user.id };
+
+    const quizzes = await Quiz.find(query).populate("createdBy", "username");
     res.json(quizzes);
   } catch (err) {
     console.error("Error fetching quizzes:", err);
@@ -50,6 +52,11 @@ exports.getQuizById = async (req, res) => {
 
     if (!quiz) {
       return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    // Authorization: Only the creator can access the quiz
+    if (quiz.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: "User not authorized to access this quiz" });
     }
 
     res.json(quiz);
@@ -122,6 +129,15 @@ exports.deleteQuiz = async (req, res) => {
 exports.getQuizAnalytics = async (req, res) => {
     try {
         const { id: quizId } = req.params;
+
+        // Check if the quiz exists and belongs to the current teacher
+        const quiz = await Quiz.findById(quizId);
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found" });
+        }
+        if (quiz.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: "User not authorized to view analytics for this quiz" });
+        }
 
         const results = await Result.find({ quiz: quizId }).populate('user', 'username');
 

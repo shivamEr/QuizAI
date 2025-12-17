@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getQuizAnalytics, handleApiError, getQuizById } from "../services/api";
-import { Bar } from 'react-chartjs-2';
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,9 +10,8 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -24,13 +23,13 @@ ChartJS.register(
 
 const QuizAnalytics = () => {
   const { id } = useParams();
-  const [quizTitle, setQuizTitle] = useState("Loading Quiz...");
+  const [quizTitle, setQuizTitle] = useState("Loading...");
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchData = async () => {
       try {
         const quizRes = await getQuizById(id);
         setQuizTitle(quizRes.data.title);
@@ -44,55 +43,58 @@ const QuizAnalytics = () => {
         setLoading(false);
       }
     };
-
-    fetchAnalytics();
+    fetchData();
   }, [id]);
 
   if (loading) {
     return (
-      <div className="text-center p-8">
-        <div className="spinner mb-4"></div>
-        <p className="text-text-secondary">Loading analytics...</p>
+      <div className="flex justify-center py-24 text-text-secondary">
+        Loading analytics…
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="content-card text-center max-w-lg mx-auto">
-        <div className="text-5xl mb-4">❌</div>
-        <p className="text-xl text-text-secondary">{error}</p>
-        <Link to="/dashboard" className="btn bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 mt-6 inline-block">
-          Back to Dashboard
-        </Link>
-      </div>
-    );
-  }
-  
-  if (!analytics || analytics.totalAttempts === 0) {
-    return (
-      <div className="container mx-auto p-6 text-center">
-        <h1 className="text-3xl font-bold text-text mb-2">{quizTitle}</h1>
-        <p className="text-xl text-text-secondary mb-6">No one has attempted this quiz yet.</p>
-        <Link to="/dashboard" className="btn bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 mt-4 inline-block">
+      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
+        <div className="mb-4 text-5xl">❌</div>
+        <p className="text-lg text-text-secondary">{error}</p>
+        <Link
+          to="/dashboard"
+          className="mt-6 inline-block rounded-xl bg-primary px-8 py-3 font-semibold text-white shadow hover:bg-primary-dark transition"
+        >
           Back to Dashboard
         </Link>
       </div>
     );
   }
 
-  // Chart data configuration
+  if (!analytics || analytics.totalAttempts === 0) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-16 text-center">
+        <h1 className="text-3xl font-bold text-text mb-2">{quizTitle}</h1>
+        <p className="text-lg text-text-secondary mb-6">
+          No student has attempted this quiz yet.
+        </p>
+        <Link
+          to="/dashboard"
+          className="rounded-xl bg-primary px-8 py-3 font-semibold text-white shadow hover:bg-primary-dark transition"
+        >
+          Back to Dashboard
+        </Link>
+      </div>
+    );
+  }
+
   const chartData = {
-    labels: ['Average Score'],
+    labels: analytics.studentResults.map(res => res.username),
     datasets: [
       {
-        label: 'Score',
-        data: [analytics.averageScore],
-        backgroundColor: 'rgba(122, 178, 211, 0.6)', // Using your primary color with transparency
-        borderColor: 'rgba(122, 178, 211, 1)',
-        borderWidth: 1,
-        borderRadius: 5,
-        barPercentage: 0.4,
+        label: "Score (%)",
+        data: analytics.studentResults.map(res => res.score),
+        backgroundColor: "rgba(99, 102, 241, 0.6)",
+        borderRadius: 8,
+        barPercentage: 0.8,
       },
     ],
   };
@@ -100,101 +102,133 @@ const QuizAnalytics = () => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       title: {
         display: true,
-        text: 'Average Quiz Score (%)',
-        font: {
-            size: 18,
-            family: 'Inter',
-        },
-        color: '#4A628A' // Your primary text color
+        text: "Student Scores (%)",
+        font: { size: 18 },
+        color: "#374151",
       },
     },
     scales: {
       y: {
         beginAtZero: true,
         max: 100,
-        ticks: { color: '#6C757D' }, // Your secondary text color
+        ticks: { color: "#6B7280" },
       },
       x: {
-        ticks: { color: '#6C757D' },
-      }
+        ticks: { color: "#6B7280" },
+      },
     },
   };
 
   return (
-    <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-text">{quizTitle} Analytics</h1>
-            <Link to="/dashboard" className="btn bg-card hover:bg-border text-text border border-border">
-                Back to Dashboard
-            </Link>
+    <div className="mx-auto max-w-7xl px-6 py-10">
+      {/* Header */}
+      <div className="mb-10 flex items-center justify-between">
+        <h1 className="text-4xl font-extrabold text-text">
+          {quizTitle} Analytics
+        </h1>
+        <Link
+          to="/dashboard"
+          className="rounded-xl border border-border bg-card px-6 py-2 font-medium text-text hover:bg-border transition"
+        >
+          Back
+        </Link>
+      </div>
+
+      {/* Overview + Chart */}
+      <div className="grid gap-6 lg:grid-cols-3 mb-10">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+          <h2 className="mb-6 text-2xl font-semibold text-text">Overview</h2>
+
+          <div className="space-y-6">
+            <div>
+              <p className="text-sm text-text-secondary">Total Attempts</p>
+              <p className="text-3xl font-bold text-primary">
+                {analytics.totalAttempts}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-text-secondary">Average Score</p>
+              <p className="text-3xl font-bold text-primary">
+                {analytics.averageScore}%
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* --- Overview & Chart --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-1 content-card">
-                <h2 className="text-2xl font-semibold text-text mb-4">Overview</h2>
-                <div className="space-y-4">
-                    <div>
-                        <p className="text-text-secondary">Total Attempts</p>
-                        <p className="text-3xl font-bold text-primary">{analytics.totalAttempts}</p>
-                    </div>
-                    <div>
-                        <p className="text-text-secondary">Average Score</p>
-                        <p className="text-3xl font-bold text-primary">{analytics.averageScore}%</p>
-                    </div>
-                </div>
-            </div>
-            <div className="lg:col-span-2 content-card h-96 flex items-center justify-center">
-                <Bar data={chartData} options={chartOptions} />
-            </div>
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 shadow-sm h-96">
+          <Bar data={chartData} options={chartOptions} />
         </div>
+      </div>
 
-        {/* --- Top Incorrect Questions --- */}
-        <div className="content-card mb-6">
-            <h2 className="text-2xl font-semibold text-text mb-4">Top Incorrect Questions</h2>
-            {analytics.topIncorrectQuestions.length > 0 ? (
-                <ul className="space-y-3">
-                {analytics.topIncorrectQuestions.map((item, index) => (
-                    <li key={index} className="p-3 bg-background rounded-lg border border-border">
-                    <p className="font-semibold text-text">{item.questionText}</p>
-                    <p className="text-sm text-danger">{item.incorrectCount} incorrect answers</p>
-                    </li>
-                ))}
-                </ul>
-            ) : (
-                <p className="text-text-secondary">No incorrect answers have been recorded yet. Great job!</p>
-            )}
-        </div>
+      {/* Top Incorrect Questions */}
+      <div className="mb-10 rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <h2 className="mb-6 text-2xl font-semibold text-text">
+          Most Incorrect Questions
+        </h2>
 
-        {/* --- Student Results Table --- */}
-        <div className="content-card">
-            <h2 className="text-2xl font-semibold text-text mb-4">All Student Attempts</h2>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-background">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Student</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Score (%)</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Attempted At</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-card divide-y divide-border">
-                    {analytics.studentResults.map((result, index) => (
-                        <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">{result.username}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{result.score}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">{new Date(result.attemptedAt).toLocaleString()}</td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+        {analytics.topIncorrectQuestions.length > 0 ? (
+          <ul className="space-y-4">
+            {analytics.topIncorrectQuestions.map((q, idx) => (
+              <li
+                key={idx}
+                className="rounded-xl border border-border bg-background p-4"
+              >
+                <p className="font-medium text-text">{q.questionText}</p>
+                <p className="text-sm text-danger">
+                  {q.incorrectCount} incorrect attempts
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-text-secondary">
+            No incorrect answers recorded. Excellent performance 🎉
+          </p>
+        )}
+      </div>
+
+      {/* Student Attempts */}
+      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <h2 className="mb-6 text-2xl font-semibold text-text">
+          Student Attempts
+        </h2>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-background">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
+                  Student
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
+                  Score (%)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
+                  Attempted At
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border bg-card">
+              {analytics.studentResults.map((res, idx) => (
+                <tr key={idx}>
+                  <td className="px-6 py-4 text-sm font-medium text-text">
+                    {res.username}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-text-secondary">
+                    {res.score}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-text-secondary">
+                    {new Date(res.attemptedAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
   );
 };
