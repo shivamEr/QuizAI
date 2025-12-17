@@ -1,0 +1,18 @@
+
+<svg width="100" height="100" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .stroke-dark { stroke: #4A628A; } /* Your dark text color */
+      .stroke-light { stroke: #7AB2D3; } /* Your primary accent color */
+    </style>
+  </defs>
+  
+  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Letter M -->
+    <path class="stroke-dark" d="M4 26V6l6 12L16 6v20" />
+    
+    <!-- Letter Q -->
+    <circle class="stroke-light" cx="22" cy="16" r="6" />
+    <line class="stroke-light" x1="26" y1="20" x2="30" y2="24" />
+  </g>
+</svg>
